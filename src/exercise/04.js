@@ -4,15 +4,18 @@
 import * as React from 'react'
 import { Switch } from '../switch'
 
+function callAll(...fns) {
+  return (...args) => {
+    fns.forEach(fn => typeof fn === 'function' && fn(...args))
+  }
+}
+
 function useToggle() {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
   const getTogglerProps = ({ onClick, ...props }) => ({
-    onClick: () => {
-      onClick && onClick()
-      toggle()
-    },
+    onClick: callAll(onClick, toggle),
     ...props,
   })
 
