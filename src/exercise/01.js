@@ -73,14 +73,22 @@ function useUser() {
   return context
 }
 
-// 🐨 add a function here called `updateUser`
-// Then go down to the `handleSubmit` from `UserSettings` and put that logic in
-// this function. It should accept: dispatch, user, and updates
+async function updateUser(dispatch, user, updates) {
+  dispatch({type: 'start update', updates})
+  try {
+    const updatedUser = await userClient.updateUser(user, updates)
+    dispatch({type: 'finish update', updatedUser})
+    return updatedUser
+  } catch (error) {
+    dispatch({type: 'fail update', error})
+    return Promise.reject(error)
+  }
+}
 
-// export {UserProvider, useUser}
+// export {UserProvider, useUserState, updateUser}
 
 // src/screens/user-profile.js
-// import {UserProvider, useUser} from './context/user-context'
+// import {UserProvider, useUserState, updateUser} from './context/user-context'
 function UserSettings() {
   const [{user, status, error}, userDispatch] = useUser()
 
@@ -97,23 +105,20 @@ function UserSettings() {
 
   function handleSubmit(event) {
     event.preventDefault()
-    // 🐨 move the following logic to the `updateUser` function you create above
-    userDispatch({type: 'start update', updates: formState})
-    userClient.updateUser(user, formState).then(
-      updatedUser => userDispatch({type: 'finish update', updatedUser}),
-      error => userDispatch({type: 'fail update', error}),
-    )
+    updateUser(userDispatch, user, formState).catch(() => {
+      /* ignore the error */
+    })
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="username">
+        <label style={{display: 'block'}} htmlFor='username'>
           Username
         </label>
         <input
-          id="username"
-          name="username"
+          id='username'
+          name='username'
           disabled
           readOnly
           value={formState.username}
@@ -121,24 +126,24 @@ function UserSettings() {
         />
       </div>
       <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="tagline">
+        <label style={{display: 'block'}} htmlFor='tagline'>
           Tagline
         </label>
         <input
-          id="tagline"
-          name="tagline"
+          id='tagline'
+          name='tagline'
           value={formState.tagline}
           onChange={handleChange}
           style={{width: '100%'}}
         />
       </div>
       <div style={{marginBottom: 12}}>
-        <label style={{display: 'block'}} htmlFor="bio">
+        <label style={{display: 'block'}} htmlFor='bio'>
           Biography
         </label>
         <textarea
-          id="bio"
-          name="bio"
+          id='bio'
+          name='bio'
           value={formState.bio}
           onChange={handleChange}
           style={{width: '100%'}}
@@ -146,7 +151,7 @@ function UserSettings() {
       </div>
       <div>
         <button
-          type="button"
+          type='button'
           onClick={() => {
             setFormState(user)
             userDispatch({type: 'reset'})
@@ -156,16 +161,16 @@ function UserSettings() {
           Reset
         </button>
         <button
-          type="submit"
+          type='submit'
           disabled={(!isChanged && !isRejected) || isPending}
         >
           {isPending
             ? '...'
             : isRejected
-            ? '✖ Try again'
-            : isChanged
-            ? 'Submit'
-            : '✔'}
+              ? '✖ Try again'
+              : isChanged
+                ? 'Submit'
+                : '✔'}
         </button>
         {isRejected ? <pre style={{color: 'red'}}>{error.message}</pre> : null}
       </div>
