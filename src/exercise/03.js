@@ -15,18 +15,26 @@ function Toggle(props) {
   return <ToggleContext.Provider value={{ on, toggle }} {...props} />
 }
 
+function useToggle() {
+  const context = React.useContext(ToggleContext)
+  if (context === undefined) {
+    throw new Error('useToggle must be used within a <Toggle />')
+  }
+  return context
+}
+
 function ToggleOn({ children }) {
-  const { on } = React.useContext(ToggleContext)
+  const { on } = useToggle()
   return on ? children : null
 }
 
 function ToggleOff({ children }) {
-  const { on } = React.useContext(ToggleContext)
+  const { on } = useToggle()
   return on ? null : children
 }
 
 function ToggleButton(props) {
-  const { on, toggle } = React.useContext(ToggleContext)
+  const { on, toggle } = useToggle()
   return <Switch on={on} onClick={toggle} {...props} />
 }
 
